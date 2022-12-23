@@ -1,8 +1,7 @@
 const Total = ({sections}) => {
-    let totalExercises = 0;
-    sections.forEach(section => {
-        totalExercises += section.exercises;
-    });
+   const totalExercises = sections.reduce(
+    (accumulator, currentValue) => accumulator + currentValue.exercises, 0
+    );
 
     return (
         <p><strong>total of {totalExercises} exercises</strong></p>
