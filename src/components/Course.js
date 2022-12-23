@@ -8,7 +8,7 @@ const Course = (props) => {
 
     return (
         <div>
-          <Header course={course.name} />
+          <Header title={course.name} />
           <Content sections={course.parts} />
           <Total sections={course.parts} />
         </div>
