@@ -7,10 +7,17 @@ const App = () => {
   const [newSearch, setNewSearch] = useState('')
   const [newResult, setNewResult] = useState('Loading Data...')
   const [countriesData, setCountriesData] = useState([])
-  
 
-  const handleSearchChange = (event) => {
+  const handleShowButton = (event) => {
+    event.preventDefault()
+    setNewSearch(event.target.id)
+    handleSearchChange(event, event.target.id)
+  }
+
+  const handleSearchChange = (event, override=null) => {
     let searchTerm = event.target.value
+    if(override != null)
+      searchTerm = override
     setNewSearch(searchTerm)
     let result = msg_TooManyMatches;
     if(searchTerm.trim().length >= 1){
@@ -39,7 +46,7 @@ const App = () => {
         }else{
           result = matches.map(country =>{
               return (
-                <p key={country.name.common}>{country.name.common}</p>
+                <p key={country.name.common}>{country.name.common}<button id={country.name.common} onClick={handleShowButton}>show</button></p>
               )
           }
           )
@@ -58,7 +65,9 @@ const App = () => {
       .get('https://restcountries.com/v3.1/all')
       .then(response => {
         //console.log("response :: ", response.data)
-        setCountriesData(response.data);
+        // filtering out countries that contain another country within their name, like, 'Philly' is within 'Southeast New Philly v2.0'
+        let countries = response.data.filter(country=>response.data.filter(cc=>cc.name.common.indexOf(country.name.common) > 0).length == 1)
+        setCountriesData(countries);
         setNewSearch('')
         setNewResult('')
       })
