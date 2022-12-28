@@ -1,21 +1,55 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+const Weather = ({capitalCity}) =>{
+  const [weatherData, setWeatherData] = useState([])
+  useEffect(() => {
+    if(capitalCity != ''){
+      axios
+        .get('http://api.openweathermap.org/data/2.5/weather?q=' + capitalCity +'&APPID='+ process.env.REACT_APP_API_KEY)
+        .then(response => {
+          console.log(response.data)
+          setWeatherData(response.data)
+        })
+    }
+  }, [capitalCity])
+  
+  if(capitalCity == ''){
+    return(<></>)
+  }else if(weatherData.length < 2){
+    return(
+      <p>xLoading weather data...</p>
+    )
+  }else{
+    return(
+      <>
+        <h2>Weather in {capitalCity}</h2>
+        <p>temperature {weatherData.main.temp} Celcius</p>
+        <img src={"http://openweathermap.org/img/wn/"+weatherData.weather[0].icon+"@2x.png"} alt="Weather Icon" />
+        <p>wind {weatherData.wind.speed} m/s</p>
+      </>
+    )
+  }
+}
+
+
 const App = () => {
   const msg_TooManyMatches = "Too many matches, specify another filter";
   const msg_NoMatches = "Zero matches, please try another filter"
   const [newSearch, setNewSearch] = useState('')
   const [newResult, setNewResult] = useState('Loading Data...')
   const [countriesData, setCountriesData] = useState([])
+  const [newCapital, setNewCapital] = useState('')
 
   const handleShowButton = (event) => {
     event.preventDefault()
     setNewSearch(event.target.id)
     handleSearchChange(event, event.target.id)
   }
-
+ 
   const handleSearchChange = (event, override=null) => {
     let searchTerm = event.target.value
+    let currentCityCapital = ''
     if(override != null)
       searchTerm = override
     setNewSearch(searchTerm)
@@ -25,7 +59,6 @@ const App = () => {
       if(matches.length > 0 && matches.length <= 10){
         if(matches.length === 1){
           let country = matches[0]
-          console.log(country)
           result = (
             <>
               <h1>{country.name.common}</h1>
@@ -41,8 +74,8 @@ const App = () => {
               </ul>
               <img src={country.flags.png} alt="Country Flag" style={{width: "196px"}} />
             </>
-            
           )
+          currentCityCapital = country.capital[0];
         }else{
           result = matches.map(country =>{
               return (
@@ -58,20 +91,28 @@ const App = () => {
       result = ''
     }
     setNewResult(result);
+    setNewCapital(currentCityCapital)
   }
 
   useEffect(() => {
     axios
       .get('https://restcountries.com/v3.1/all')
       .then(response => {
-        //console.log("response :: ", response.data)
-        // filtering out countries that contain another country within their name, like, 'Philly' is within 'Southeast New Philly v2.0'
-        let countries = response.data.filter(country=>response.data.filter(cc=>cc.name.common.indexOf(country.name.common) > 0).length == 1)
+        // filtering out countries that contain are apart of another country's name, like, 'Philly' is apart of 'Southeast New Philly v2.0'
+        let countries = response.data.filter(country =>{
+          if(response.data.filter(c=>c.name.common.includes(country.name.common)).length > 1){
+            return(false)
+          }else{
+            return(true)
+          }
+        })
         setCountriesData(countries);
         setNewSearch('')
         setNewResult('')
       })
   }, [])
+
+  
 
   return (
     <div>
@@ -80,6 +121,7 @@ const App = () => {
           onChange={handleSearchChange} />
       <br />
       {newResult}
+      <Weather capitalCity={newCapital} />
     </div>
   )
 }
