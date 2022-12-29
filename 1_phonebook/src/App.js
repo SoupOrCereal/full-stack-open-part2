@@ -3,6 +3,7 @@ import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
 import axios from 'axios'
+import names from './services/names'
 
 const App = () => {
   const [persons, setPersons] = useState([
@@ -14,13 +15,15 @@ const App = () => {
 
   const addName = (event) => {
     event.preventDefault()
-    console.log('add name for "', newName, '"')
     if(persons.find(person => person.name === newName)){
       alert(`${newName} is already added to phonebook`);
     }else{
-      setPersons(persons.concat({ name: newName, number: newNumber, id: persons.length+1 }))
-      setNewName("")
-      setNewNumber("")
+      names.create({ name: newName, number: newNumber })
+      .then(returnedNote => {
+        setPersons(persons.concat(returnedNote))
+        setNewName("")
+        setNewNumber("")
+      }).catch(err=>console.log("Error adding new person! ", err))
     }
   }
 
@@ -37,13 +40,9 @@ const App = () => {
   }
 
   useEffect(() => {
-    //console.log('getting names from DB...')
-    axios
-      .get('http://localhost:3001/db')
-      .then(response => {
-        //console.log("DB response :: ", response.data)
-        setPersons(response.data.persons)
-      })
+    names.getAll().then(allNames => {
+      setPersons(allNames)
+    })
   }, [])
   
   return (
