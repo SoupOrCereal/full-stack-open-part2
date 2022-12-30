@@ -4,6 +4,8 @@ import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
 import axios from 'axios'
 import phonebook from './services/phonebook'
+import './App.css'
+import Notify from './components/Notify'
 
 const App = () => { 
   const [persons, setPersons] = useState([
@@ -12,14 +14,16 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newSearch, setNewSearch] = useState('')
-
+  const [newNotify, setNewNotify] = useState({msg:'', isErr:true})
+  
   const addName = (event) => {
     event.preventDefault()
     let personFound = persons.find(person => person.name === newName)
     if(personFound){
       if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
-        phonebook.updateNumber({ updateID: personFound.id, number: newNumber })
+        phonebook.updateNumber({ personOld: personFound, newNumber: newNumber })
           .then(updatedNote => {
+            setNewNotify({msg:'Updated Phone Number', isErr:false})
             setPersons(
                 persons.map(per=>{
                   let returnPerson = per;
@@ -30,15 +34,16 @@ const App = () => {
               )
             setNewName("")
             setNewNumber("")
-          }).catch(err=>console.log("Error adding new person! ", err))
+          }).catch(err=>setNewNotify({msg:'Error updating phone number!', isErr:true}))
       }
     }else{
       phonebook.create({ name: newName, number: newNumber })
       .then(returnedNote => {
+        setNewNotify({msg:'Added Person', isErr:false})
         setPersons(persons.concat(returnedNote))
         setNewName("")
         setNewNumber("")
-      }).catch(err=>console.log("Error adding new person! ", err))
+      }).catch(err=>setNewNotify({msg:"Error adding new person!", isErr:true}))
     }
   }
 
@@ -61,10 +66,11 @@ const App = () => {
     if (window.confirm(`Delete ${deleteName} ?`)) {
       phonebook.del({ delID: deleteID })
       .then(returnedNote => {
+        setNewNotify({msg:"Deleted Person", isErr:false})
         setPersons(
           persons.filter(person=>person.id != deleteID)
         )
-      }).catch(err=>console.log("Error deleting person! ", err))
+      }).catch(err=>setNewNotify({msg:"Error deleting person!", isErr:true}))
     }
   }
 
@@ -74,8 +80,23 @@ const App = () => {
     })
   }, [])
   
+  let notifyHTML = (<></>)
+  if(newNotify.message != ''){
+    notifyHTML = (<Notify message={newNotify.msg} isError={newNotify.isErr} />);
+  }
+
+  useEffect(() => {
+    if(newNotify.message != ''){
+      const timer = setTimeout(() => {
+        setNewNotify({msg:'', isErr:true})
+      }, 3690);
+      return () => clearTimeout(timer);
+    }
+  }, [newNotify]);
+
   return (
     <div>
+      {notifyHTML}
       <h2>Phonebook</h2>
       <Filter newSearch={newSearch} handleSearchChange={handleSearchChange} />
       <h2>add a new</h2>

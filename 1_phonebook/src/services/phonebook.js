@@ -30,8 +30,8 @@ const del = ({delID}) => {
     return request.then(response => response.data)
 }
 
-const updateNumber = ({updateID, newNumber}) => {
-    const request = axios.put(`${baseUrl}/${updateID}`, { number: newNumber })
+const updateNumber = ({personOld, newNumber}) => {
+    const request = axios.put(`${baseUrl}/${personOld.id}`, { name:personOld.name, id:personOld.id, number: newNumber })
     return request.then(response => response.data)
 }
 
