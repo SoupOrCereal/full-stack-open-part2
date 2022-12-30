@@ -30,4 +30,9 @@ const del = ({delID}) => {
     return request.then(response => response.data)
 }
 
-export default { getAll, create, del }
+const updateNumber = ({updateID, newNumber}) => {
+    const request = axios.put(`${baseUrl}/${updateID}`, { number: newNumber })
+    return request.then(response => response.data)
+}
+
+export default { getAll, create, del, updateNumber }
